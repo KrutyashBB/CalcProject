@@ -1,25 +1,8 @@
-package main
+package calculation
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
-)
-
-func main() {
-	res, err := Calc("((2+2-*(2")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	fmt.Println(res)
-}
-
-var (
-	ErrDivisionByZero      = fmt.Errorf("division by zero")
-	ErrNumParsing          = fmt.Errorf("number parsing error")
-	ErrParenthesisSequence = fmt.Errorf("incorrect bracket sequence")
-	ErrExpression          = fmt.Errorf("incorrect expression")
 )
 
 func Calc(expr string) (float64, error) {
@@ -48,7 +31,7 @@ func Calc(expr string) (float64, error) {
 
 		case chr == '+' || chr == '*' || chr == '-' || chr == '/':
 			if len(ops) > 0 && priority[ops[len(ops)-1]] >= priority[chr] {
-				if nums, ops, err = ExecExpression(nums, ops); err != nil {
+				if nums, ops, err = execExpression(nums, ops); err != nil {
 					return 0, err
 				}
 			}
@@ -59,7 +42,7 @@ func Calc(expr string) (float64, error) {
 
 		case chr == ')':
 			for len(ops) > 0 && ops[len(ops)-1] != '(' {
-				if nums, ops, err = ExecExpression(nums, ops); err != nil {
+				if nums, ops, err = execExpression(nums, ops); err != nil {
 					return 0, err
 				}
 			}
@@ -67,11 +50,13 @@ func Calc(expr string) (float64, error) {
 				return 0, ErrParenthesisSequence
 			}
 			ops = ops[:len(ops)-1]
+		default:
+			return 0, ErrExpression
 		}
 	}
 
 	for len(ops) > 0 {
-		if nums, ops, err = ExecExpression(nums, ops); err != nil {
+		if nums, ops, err = execExpression(nums, ops); err != nil {
 			return 0, err
 		}
 	}
@@ -83,7 +68,7 @@ func Calc(expr string) (float64, error) {
 	return nums[0], nil
 }
 
-func ExecExpression(nums []float64, ops []rune) ([]float64, []rune, error) {
+func execExpression(nums []float64, ops []rune) ([]float64, []rune, error) {
 	if len(nums) < 2 {
 		return nil, nil, ErrExpression
 	}
